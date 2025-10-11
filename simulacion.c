@@ -3,6 +3,7 @@
 
 typedef enum { CPU_BURST, IO_BURST } BurstType;
 typedef enum { NEW, READY, RUNNING, WAITING, TERMINATED } ProcessState;
+typedef enum { FCFS, ROUND_ROBIN } SchedulerPolicy;
 
 typedef struct {
     BurstType type;
@@ -41,6 +42,7 @@ typedef struct {
     Queue waiting_queue;
     Process *running;
     Process *processes;
+    SchedulerPolicy policy;
     int process_count;
 } Simulator;
 
@@ -172,6 +174,40 @@ void run_simulation(Simulator *sim) {
     }
 }
 
+// =================== MÉTRICAS ===================
+
+void print_statistics(Simulator *sim) {
+    int total_turnaround = 0;
+    int total_response = 0;
+    int completed = 0;
+
+    printf("\n=== Estadísticas ===\n");
+    for (int i = 0; i < sim->process_count; i++) {
+        Process *p = &sim->processes[i];
+        if (p->state == TERMINATED) {
+            int turnaround = p->finish_time - p->arrival_time;
+            int response = p->start_time - p->arrival_time;
+
+            total_turnaround += turnaround;
+            total_response += response;
+            completed++;
+
+            printf("P%d: arrival=%d, start=%d, finish=%d, turnaround=%d, response=%d\n",
+                   p->pid, p->arrival_time, p->start_time, p->finish_time,
+                   turnaround, response);
+        }
+    }
+
+    double avg_turnaround = (double) total_turnaround / completed;
+    double avg_response = (double) total_response / completed;
+    double throughput = (double) completed / sim->clock;
+
+    printf("\n=== Promedios ===\n");
+    printf("Avg Turnaround: %.2f\n", avg_turnaround);
+    printf("Avg Response: %.2f\n", avg_response);
+    printf("Throughput: %.3f procesos/quantum\n", throughput);
+}
+
 // =================== MAIN ===================
 
 int main() {
@@ -187,9 +223,24 @@ int main() {
         {1, 0, p1_bursts, 3, 0, NEW, -1, 0, 0},
         {2, 2, p2_bursts, 1, 0, NEW, -1, 0, 0}
     };
-
+    printf("Seleccione política de planificación:\n");
+    printf("1. FCFS\n");
+    printf("2. Round Robin\n> ");
+    int choice;
+    scanf("%d", &choice);
     Simulator sim = {0};
-    sim.quantum = 3;   // 🔹 quantum configurable
+    if (choice == 1) {
+        sim.policy = FCFS;
+        sim.quantum = 1000; // Muy grande para simular FCFS
+    } else {
+        sim.policy = ROUND_ROBIN;
+        int value_quantum;
+        printf("Ingrese el quantum: ");
+        scanf("%d", &value_quantum);
+        printf("Seleccionado Round Robin (quantum=%d)\n", value_quantum);
+        sim.quantum = value_quantum;   // 🔹 quantum configurable
+    }
+
     sim.processes = processes;
     sim.process_count = 2;
     init_queue(&sim.ready_queue);
@@ -197,13 +248,7 @@ int main() {
 
     run_simulation(&sim);
 
-    printf("\n=== Resultados ===\n");
-    for (int i = 0; i < sim.process_count; i++) {
-        Process *p = &sim.processes[i];
-        printf("P%d: start=%d, finish=%d, turnaround=%d\n",
-               p->pid, p->start_time, p->finish_time,
-               p->finish_time - p->arrival_time);
-    }
+    print_statistics(&sim);
 
     return 0;
 }
