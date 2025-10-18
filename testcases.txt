@@ -1,0 +1,53 @@
+for FCFS, I/O Bound workload
+=== Promedios ===
+Avg Turnaround: 2517.54
+Avg Response: 265.98
+Throughput: 0.034 procesos/unidad de tiempo
+
+for FCFS, Balanced workload
+=== Promedios ===
+Avg Turnaround: 3746.24
+Avg Response: 277.57
+Throughput: 0.021 procesos/unidad de tiempo
+
+for FCFS, CPU Bound workload
+=== Promedios ===
+Avg Turnaround: 5606.55
+Avg Response: 324.30
+Throughput: 0.015 procesos/unidad de tiempo
+
+for RR, I/O Bound workload & quantum = 5
+=== Promedios ===
+Avg Turnaround: 2403.41
+Avg Response: 195.69
+Throughput: 0.033 procesos/unidad de tiempo
+
+for RR, Balanced workload & quantum = 5
+=== Promedios ===
+Avg Turnaround: 3552.23
+Avg Response: 203.33
+Throughput: 0.021 procesos/unidad de tiempo
+
+for RR, CPU Bound workload & quantum = 5
+=== Promedios ===
+Avg Turnaround: 5421.26
+Avg Response: 215.63
+Throughput: 0.016 procesos/unidad de tiempo
+
+for SJF, I/O Bound workload
+=== Promedios ===
+Avg Turnaround: 1559.74
+Avg Response: 773.73
+Throughput: 0.034 procesos/unidad de tiempo
+
+for SJF, Balanced workload
+=== Promedios ===
+Avg Turnaround: 2229.49
+Avg Response: 1099.37
+Throughput: 0.021 procesos/unidad de tiempo
+
+for SJF, CPU Bound workload
+=== Promedios ===
+Avg Turnaround: 3859.01
+Avg Response: 1012.13
+Throughput: 0.016 procesos/unidad de tiempo
