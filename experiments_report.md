@@ -116,19 +116,6 @@ A partir de los resultados medidos:
 - Si la prioridad es reducir la latencia de respuesta (por ejemplo sistemas interactivos), Round Robin con quantum pequeño (ej. 4–8) es preferible.
 - FCFS es simple pero puede tener un rendimiento pobre para cargas que incluyen procesos largos (CPU-bound).
 
-
-## Reproducción de los experimentos
-1. Compilar el simulador (desde la carpeta `Tarea02`):
-
-```cmd
-gcc "c:\Users\mauri\Documents\USFQ\Semestre 7\OS\Tarea02\simulacion.c" -o "simulacion.exe"
-```
-
-2. Ejecutar y seleccionar política y workload: el programa pedirá primero la política (1:FCFS,2:RR,3:SJF). Si selecciona RR deberá ingresar el quantum. Luego pedirá el workload (1:90% I/O, 2:50/50, 3:90% CPU).
-
-3. Para obtener datos reproducibles, ajustar la semilla RNG o modificar el generador de workloads para leer un archivo con procesos determinísticos.
-
-
 ## Limitaciones y trabajo futuro
 - La generación de bursts es aleatoria; para estudios estadísticos robustos conviene ejecutar cada combinación algoritmo×workload múltiples veces (p. ej. 30 replicaciones) y reportar medias y desviaciones estándar.
 - Se podría exportar la traza y los datos a CSV para análisis en Python/R y generar gráficos (CDF, boxplots) de las métricas.
