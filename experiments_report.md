@@ -135,8 +135,6 @@ Se consultó un LLM para:
 - **Manejo de memoria:** Recomendaciones sobre gestión de memoria dinámica para las estructuras de colas y procesos.
 - **Arquitectura del simulador:** Sugerencias sobre la organización del ciclo principal de simulación (tick-based) y actualización de estados.
 
-**Verificación local:** Todas las implementaciones se compilaron y ejecutaron en WSL Ubuntu con gcc, verificando el correcto funcionamiento de las colas y la lógica de scheduling.
-
 **Criterios finales de diseño:** Las estructuras de colas, los algoritmos de inserción/extracción y la máquina de estados de procesos fueron ajustados por el equipo para garantizar:
 - Correcta priorización en SJF (menor burst primero)
 - Manejo apropiado de preempción en Round Robin
