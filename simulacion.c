@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 typedef enum { CPU_BURST, IO_BURST } BurstType;
 typedef enum { NEW, READY, RUNNING, WAITING, TERMINATED } ProcessState;
@@ -304,81 +305,78 @@ void print_statistics(Simulator *sim) {
         printf("Throughput: %.3f procesos/unidad de tiempo\n", throughput);
     }
 }
+// =================== Generadores de Workloads ===================
+
+// Crea un burst con duración e inicializa remaining
+Burst make_burst(BurstType type, int duration) {
+    Burst b;
+    b.type = type;
+    b.duration = duration;
+    b.remaining = duration;
+    return b;
+}
+
+// Genera 'count' bursts para un proceso, favoreciendo I/O o CPU según is_io_bound
+void generate_bursts(Burst *b, int count, int is_io_bound) {
+    for (int i = 0; i < count; i++) {
+        int choose = rand() % 100;
+        BurstType t;
+        if (is_io_bound) {
+            // Alta probabilidad de I/O
+            t = (choose < 75) ? IO_BURST : CPU_BURST; // ~75% I/O
+        } else {
+            // Alta probabilidad de CPU
+            t = (choose < 75) ? CPU_BURST : IO_BURST; // ~75% CPU
+        }
+
+        int dur;
+        if (t == CPU_BURST) {
+            if (is_io_bound) dur = (rand() % 3) + 1;    // 1-3 (corto)
+            else dur = (rand() % 7) + 6;                // 6-12 (largo)
+        } else {
+            if (is_io_bound) dur = (rand() % 5) + 4;    // 4-8 (I/O más largo)
+            else dur = (rand() % 3) + 1;                // 1-3 (I/O corto)
+        }
+
+        b[i] = make_burst(t, dur);
+    }
+}
+
+// Crea un workload de 'n' procesos con proporción io_fraction (ej: 0.9 para 90% I/O)
+Process *create_workload(int n, double io_fraction, int bursts_per_proc) {
+    Process *procs = malloc(sizeof(Process) * n);
+    if (!procs) {
+        fprintf(stderr, "Error al reservar memoria para procesos\n");
+        exit(1);
+    }
+
+    int num_io = (int)(n * io_fraction + 0.5);
+
+    for (int i = 0; i < n; i++) {
+        int is_io = (i < num_io);
+        procs[i].pid = i + 1;
+        procs[i].arrival_time = i / 10; // agrupar 10 procesos por unidad de tiempo
+        procs[i].burst_count = bursts_per_proc;
+        procs[i].current_burst = 0;
+        procs[i].state = NEW;
+        procs[i].start_time = -1;
+        procs[i].finish_time = 0;
+        procs[i].total_wait_time = 0;
+        procs[i].bursts = malloc(sizeof(Burst) * bursts_per_proc);
+        if (!procs[i].bursts) {
+            fprintf(stderr, "Error al reservar memoria para bursts del proceso %d\n", i+1);
+            exit(1);
+        }
+        generate_bursts(procs[i].bursts, bursts_per_proc, is_io);
+    }
+
+    return procs;
+}
 
 // =================== MAIN ===================
 int main() {
-    Burst p1_bursts[] = {
-        {CPU_BURST, 2, 2}, {IO_BURST, 3, 3},
-        {CPU_BURST, 3, 3}, {IO_BURST, 2, 2},
-        {CPU_BURST, 1, 1}, {IO_BURST, 4, 4},
-        {CPU_BURST, 2, 2}
-    };
-    
-    Burst p2_bursts[] = {
-        {CPU_BURST, 1, 1}, {IO_BURST, 2, 2},
-        {CPU_BURST, 2, 2}, {IO_BURST, 1, 1},
-        {CPU_BURST, 1, 1}, {IO_BURST, 3, 3},
-        {CPU_BURST, 3, 3}
-    };
-    
-    Burst p3_bursts[] = {
-        {CPU_BURST, 3, 3}, {IO_BURST, 2, 2},
-        {CPU_BURST, 2, 2}, {IO_BURST, 3, 3},
-        {CPU_BURST, 1, 1}, {IO_BURST, 1, 1},
-        {CPU_BURST, 2, 2}
-    };
-    
-    Burst p4_bursts[] = {
-        {CPU_BURST, 1, 1}, {IO_BURST, 4, 4},
-        {CPU_BURST, 2, 2}, {IO_BURST, 2, 2},
-        {CPU_BURST, 1, 1}, {IO_BURST, 3, 3},
-        {CPU_BURST, 3, 3}
-    };
-    
-    Burst p5_bursts[] = {
-        {CPU_BURST, 2, 2}, {IO_BURST, 1, 1},
-        {CPU_BURST, 3, 3}, {IO_BURST, 2, 2},
-        {CPU_BURST, 1, 1}, {IO_BURST, 2, 2},
-        {CPU_BURST, 2, 2}
-    };
-    
-    // Procesos CPU Bound (5 procesos) - CPU bursts largos, pocos I/O bursts
-    Burst p6_bursts[] = {
-        {CPU_BURST, 8, 8}, {IO_BURST, 2, 2}, {CPU_BURST, 6, 6}
-    };
-    
-    Burst p7_bursts[] = {
-        {CPU_BURST, 10, 10}, {IO_BURST, 1, 1}, {CPU_BURST, 5, 5}
-    };
-    
-    Burst p8_bursts[] = {
-        {CPU_BURST, 12, 12}
-    };
-    
-    Burst p9_bursts[] = {
-        {CPU_BURST, 7, 7}, {IO_BURST, 3, 3}, {CPU_BURST, 8, 8}
-    };
-    
-    Burst p10_bursts[] = {
-        {CPU_BURST, 9, 9}, {IO_BURST, 2, 2}, {CPU_BURST, 6, 6}
-    };
-    
-    Process processes[] = {
-        // I/O Bound processes
-        {1, 0, p1_bursts, 7, 0, NEW, -1, 0, 0},   // Tiempo total CPU: 8
-        {2, 1, p2_bursts, 7, 0, NEW, -1, 0, 0},   // Tiempo total CPU: 7  
-        {3, 2, p3_bursts, 7, 0, NEW, -1, 0, 0},   // Tiempo total CPU: 8
-        {4, 3, p4_bursts, 7, 0, NEW, -1, 0, 0},   // Tiempo total CPU: 7
-        {5, 4, p5_bursts, 7, 0, NEW, -1, 0, 0},   // Tiempo total CPU: 9
-        
-        // CPU Bound processes  
-        {6, 0, p6_bursts, 3, 0, NEW, -1, 0, 0},   // Tiempo total CPU: 14
-        {7, 1, p7_bursts, 3, 0, NEW, -1, 0, 0},   // Tiempo total CPU: 15
-        {8, 2, p8_bursts, 1, 0, NEW, -1, 0, 0},   // Tiempo total CPU: 12
-        {9, 3, p9_bursts, 3, 0, NEW, -1, 0, 0},   // Tiempo total CPU: 15
-        {10, 4, p10_bursts, 3, 0, NEW, -1, 0, 0}  // Tiempo total CPU: 15
-    };
-    
+    srand((unsigned) time(NULL));
+
     printf("Seleccione política de planificación:\n");
     printf("1. FCFS\n");
     printf("2. Round Robin\n");
@@ -413,8 +411,37 @@ int main() {
             break;
     }
 
-    sim.processes = processes;
-    sim.process_count = 10;
+    // Selección del workload (100 procesos)
+    printf("\nSeleccione workload:\n");
+    printf("1. 90%% I/O-bound, 10%% CPU-bound\n");
+    printf("2. 50%% I/O-bound, 50%% CPU-bound\n");
+    printf("3. 10%% I/O-bound, 90%% CPU-bound\n> ");
+
+    int wchoice;
+    scanf("%d", &wchoice);
+
+    Process *dynamic_processes = NULL;
+    switch (wchoice) {
+        case 1:
+            dynamic_processes = create_workload(100, 0.90, 10);
+            printf("Seleccionado workload 90%% I/O-bound\n");
+            break;
+        case 2:
+            dynamic_processes = create_workload(100, 0.50, 10);
+            printf("Seleccionado workload 50/50\n");
+            break;
+        case 3:
+            dynamic_processes = create_workload(100, 0.10, 10);
+            printf("Seleccionado workload 90%% CPU-bound\n");
+            break;
+        default:
+            printf("Opción inválida. Usando workload 50/50 por defecto.\n");
+            dynamic_processes = create_workload(100, 0.50, 10);
+            break;
+    }
+
+    sim.processes = dynamic_processes;
+    sim.process_count = 100;
     init_queue(&sim.ready_queue);
     init_priority_queue(&sim.sjf_queue);
     init_queue(&sim.waiting_queue);
