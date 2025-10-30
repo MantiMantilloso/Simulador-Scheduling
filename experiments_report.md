@@ -41,56 +41,125 @@ Los procesos se hicieron llegar en el tiempo agrupando 10 procesos por unidad de
 ## Resultados medidos
 Los resultados provienen del fichero `testcases.txt` (salida del simulador) y resumen las métricas promedio para cada combinación algoritmo × workload.
 
-### FCFS
-- I/O Bound:
-  - Avg Turnaround: 2517.54
-  - Avg Response: 265.98
-  - Throughput: 0.034 procesos/unidad de tiempo
+### Tabla Resumen General
 
-- Balanced:
-  - Avg Turnaround: 3746.24
-  - Avg Response: 277.57
-  - Throughput: 0.021 procesos/unidad de tiempo
+| Algoritmo | Workload | Avg Turnaround | Avg Response | Throughput |
+|-----------|----------|----------------|--------------|------------|
+| **FCFS** | I/O Bound (90/10) | 2517.54 | 265.98 | 0.034 |
+| **FCFS** | Balanced (50/50) | 3746.24 | 277.57 | 0.021 |
+| **FCFS** | CPU Bound (10/90) | 5606.55 | 324.30 | 0.015 |
+| **Round Robin (q=5)** | I/O Bound (90/10) | 2403.41 | **195.69** | 0.033 |
+| **Round Robin (q=5)** | Balanced (50/50) | 3552.23 | **203.33** | 0.021 |
+| **Round Robin (q=5)** | CPU Bound (10/90) | 5421.26 | **215.63** | 0.016 |
+| **SJF** | I/O Bound (90/10) | **1559.74** | 773.73 | 0.034 |
+| **SJF** | Balanced (50/50) | **2229.49** | 1099.37 | 0.021 |
+| **SJF** | CPU Bound (10/90) | **3859.01** | 1012.13 | 0.016 |
 
-- CPU Bound:
-  - Avg Turnaround: 5606.55
-  - Avg Response: 324.30
-  - Throughput: 0.015 procesos/unidad de tiempo
+*Nota: Los valores en **negrita** representan los mejores resultados para cada métrica por workload.*
 
+---
 
-### Round Robin (quantum = 5)
-- I/O Bound:
-  - Avg Turnaround: 2403.41
-  - Avg Response: 195.69
-  - Throughput: 0.033 procesos/unidad de tiempo
+### Comparación por Métrica
 
-- Balanced:
-  - Avg Turnaround: 3552.23
-  - Avg Response: 203.33
-  - Throughput: 0.021 procesos/unidad de tiempo
+#### Turnaround Time (menor es mejor)
 
-- CPU Bound:
-  - Avg Turnaround: 5421.26
-  - Avg Response: 215.63
-  - Throughput: 0.016 procesos/unidad de tiempo
+| Workload | FCFS | Round Robin | SJF | Ganador |
+|----------|------|-------------|-----|---------|
+| I/O Bound (90/10) | 2517.54 | 2403.41 | **1559.74** | SJF (-38% vs FCFS) |
+| Balanced (50/50) | 3746.24 | 3552.23 | **2229.49** | SJF (-40% vs FCFS) |
+| CPU Bound (10/90) | 5606.55 | 5421.26 | **3859.01** | SJF (-31% vs FCFS) |
 
+**Conclusión**: SJF reduce el turnaround promedio entre 31-40% comparado con FCFS.
 
-### SJF
-- I/O Bound:
-  - Avg Turnaround: 1559.74
-  - Avg Response: 773.73
-  - Throughput: 0.034 procesos/unidad de tiempo
+---
 
-- Balanced:
-  - Avg Turnaround: 2229.49
-  - Avg Response: 1099.37
-  - Throughput: 0.021 procesos/unidad de tiempo
+#### Response Time (menor es mejor)
 
-- CPU Bound:
-  - Avg Turnaround: 3859.01
-  - Avg Response: 1012.13
-  - Throughput: 0.016 procesos/unidad de tiempo
+| Workload | FCFS | Round Robin | SJF | Ganador |
+|----------|------|-------------|-----|---------|
+| I/O Bound (90/10) | 265.98 | **195.69** | 773.73 | Round Robin (-26% vs FCFS) |
+| Balanced (50/50) | 277.57 | **203.33** | 1099.37 | Round Robin (-27% vs FCFS) |
+| CPU Bound (10/90) | 324.30 | **215.63** | 1012.13 | Round Robin (-34% vs FCFS) |
 
+**Conclusión**: Round Robin mejora el tiempo de respuesta entre 26-34% comparado con FCFS. SJF tiene el peor response time (294-441% mayor que RR).
+
+---
+
+#### Throughput (mayor es mejor)
+
+| Workload | FCFS | Round Robin | SJF | Observación |
+|----------|------|-------------|-----|-------------|
+| I/O Bound (90/10) | 0.034 | 0.033 | 0.034 | Empate técnico |
+| Balanced (50/50) | 0.021 | 0.021 | 0.021 | Idéntico |
+| CPU Bound (10/90) | 0.015 | 0.016 | 0.016 | RR/SJF ligeramente mejor |
+
+**Conclusión**: El throughput es prácticamente idéntico entre algoritmos para cada workload, dominado por la carga total de trabajo.
+
+---
+
+### Análisis por Workload
+
+#### Workload I/O Bound (90% I/O, 10% CPU)
+
+| Métrica | FCFS | Round Robin | SJF | Diferencia Max |
+|---------|------|-------------|-----|----------------|
+| Avg Turnaround | 2517.54 | 2403.41 (-4.5%) | **1559.74 (-38%)** | 957.80 |
+| Avg Response | 265.98 | **195.69 (-26%)** | 773.73 (+191%) | 578.04 |
+| Throughput | 0.034 | 0.033 | 0.034 | ≈0 |
+
+**Mejor para Turnaround**: SJF  
+**Mejor para Response**: Round Robin  
+**Mejor para Throughput**: Empate (FCFS/SJF)
+
+---
+
+#### Workload Balanced (50% I/O, 50% CPU)
+
+| Métrica | FCFS | Round Robin | SJF | Diferencia Max |
+|---------|------|-------------|-----|----------------|
+| Avg Turnaround | 3746.24 | 3552.23 (-5.2%) | **2229.49 (-40%)** | 1516.75 |
+| Avg Response | 277.57 | **203.33 (-27%)** | 1099.37 (+296%) | 896.04 |
+| Throughput | 0.021 | 0.021 | 0.021 | 0 |
+
+**Mejor para Turnaround**: SJF  
+**Mejor para Response**: Round Robin  
+**Mejor para Throughput**: Empate
+
+---
+
+#### Workload CPU Bound (10% I/O, 90% CPU)
+
+| Métrica | FCFS | Round Robin | SJF | Diferencia Max |
+|---------|------|-------------|-----|----------------|
+| Avg Turnaround | 5606.55 | 5421.26 (-3.3%) | **3859.01 (-31%)** | 1747.54 |
+| Avg Response | 324.30 | **215.63 (-34%)** | 1012.13 (+212%) | 796.50 |
+| Throughput | 0.015 | 0.016 (+6.7%) | 0.016 (+6.7%) | 0.001 |
+
+**Mejor para Turnaround**: SJF  
+**Mejor para Response**: Round Robin  
+**Mejor para Throughput**: Round Robin/SJF
+
+---
+
+### Gráfico Visual de Rendimiento Relativo
+
+#### Turnaround Time (normalizado a FCFS = 100%)
+
+| Workload | FCFS | Round Robin | SJF |
+|----------|------|-------------|-----|
+| I/O Bound | 100% | 95% | **62%** ⬇ |
+| Balanced | 100% | 95% | **59%** ⬇ |
+| CPU Bound | 100% | 97% | **69%** ⬇ |
+
+#### Response Time (normalizado a FCFS = 100%)
+
+| Workload | FCFS | Round Robin | SJF |
+|----------|------|-------------|-----|
+| I/O Bound | 100% | **74%** ⬇ | 291% ⬆ |
+| Balanced | 100% | **73%** ⬇ | 396% ⬆ |
+| CPU Bound | 100% | **66%** ⬇ | 312% ⬆ |
+
+---
 
 ## Análisis y discusión
 A partir de los resultados medidos:
