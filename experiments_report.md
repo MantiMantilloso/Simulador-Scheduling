@@ -185,19 +185,6 @@ A partir de los resultados medidos:
 - Si la prioridad es reducir la latencia de respuesta (por ejemplo sistemas interactivos), Round Robin con quantum pequeño (ej. 4–8) es preferible.
 - FCFS es simple pero puede tener un rendimiento pobre para cargas que incluyen procesos largos (CPU-bound).
 
-
-## Reproducción de los experimentos
-1. Compilar el simulador (desde la carpeta `Tarea02`):
-
-```cmd
-gcc "c:\Users\mauri\Documents\USFQ\Semestre 7\OS\Tarea02\simulacion.c" -o "simulacion.exe"
-```
-
-2. Ejecutar y seleccionar política y workload: el programa pedirá primero la política (1:FCFS,2:RR,3:SJF). Si selecciona RR deberá ingresar el quantum. Luego pedirá el workload (1:90% I/O, 2:50/50, 3:90% CPU).
-
-3. Para obtener datos reproducibles, ajustar la semilla RNG o modificar el generador de workloads para leer un archivo con procesos determinísticos.
-
-
 ## Limitaciones y trabajo futuro
 - La generación de bursts es aleatoria; para estudios estadísticos robustos conviene ejecutar cada combinación algoritmo×workload múltiples veces (p. ej. 30 replicaciones) y reportar medias y desviaciones estándar.
 - Se podría exportar la traza y los datos a CSV para análisis en Python/R y generar gráficos (CDF, boxplots) de las métricas.
@@ -207,3 +194,18 @@ gcc "c:\Users\mauri\Documents\USFQ\Semestre 7\OS\Tarea02\simulacion.c" -o "simul
 
 ## Conclusión
 Los resultados muestran las típicas ventajas y desventajas de cada algoritmo: SJF optimiza turnaround, RR reduce tiempo de respuesta, y FCFS es el menos eficiente en presencia de procesos largos. El throughput fue similar entre algoritmos en estas instancias porque depende más del total de trabajo y de la mezcla I/O/CPU que de la política en sí.
+
+## Uso de LLMs (documentación mínima)
+
+Se consultó un LLM para:
+
+- **Estructuras de datos:** Implementación de una cola de prioridad (priority queue) para el algoritmo SJF y cola FIFO para FCFS/RR en C.
+- **Lógica de scheduling:** Asistencia en la lógica de inserción y extracción de procesos de las colas, manejo de estados y transiciones entre READY, RUNNING, WAITING.
+- **Manejo de memoria:** Recomendaciones sobre gestión de memoria dinámica para las estructuras de colas y procesos.
+- **Arquitectura del simulador:** Sugerencias sobre la organización del ciclo principal de simulación (tick-based) y actualización de estados.
+
+**Criterios finales de diseño:** Las estructuras de colas, los algoritmos de inserción/extracción y la máquina de estados de procesos fueron ajustados por el equipo para garantizar:
+- Correcta priorización en SJF (menor burst primero)
+- Manejo apropiado de preempción en Round Robin
+- Transiciones de estado consistentes
+- Liberación completa de memoria al finalizar
