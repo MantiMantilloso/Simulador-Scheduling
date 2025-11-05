@@ -209,3 +209,5 @@ Se consultó un LLM para:
 - Manejo apropiado de preempción en Round Robin
 - Transiciones de estado consistentes
 - Liberación completa de memoria al finalizar
+
+Conversacion Completa para la implementacion: https://chatgpt.com/share/6907b2cb-03f8-8006-b5ac-d120824325fc
