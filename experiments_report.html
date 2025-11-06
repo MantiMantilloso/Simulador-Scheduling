@@ -1,0 +1,583 @@
+<h1 id="informe-de-experimentos-simulador-de-scheduling">Informe de
+Experimentos — Simulador de Scheduling</h1>
+<p>Fecha: 17 de octubre de 2025</p>
+<h2 id="objetivo">Objetivo</h2>
+<p>Comparar objetivamente tres algoritmos de scheduling (FCFS, Round
+Robin, SJF) frente a tres tipos de workloads definidos por la proporción
+de procesos I/O-bound y CPU-bound: balanceado (50/50), I/O-bound
+dominante (90% I/O), y CPU-bound dominante (90% CPU). Las métricas
+evaluadas son:</p>
+<ul>
+<li>Throughput (procesos completados / unidad de tiempo)</li>
+<li>Avg Turnaround (promedio de tiempo turnaround)</li>
+<li>Avg Response Time (promedio de tiempo de respuesta)</li>
+</ul>
+<h2 id="requerimientos-resumen">Requerimientos (resumen)</h2>
+<p>Para el trabajo se definieron los siguientes requerimientos
+mínimos:</p>
+<ol type="1">
+<li>Implementar un simulador en C que modele procesos con bursts (CPU e
+I/O).</li>
+<li>Soportar la selección de la política de scheduling en tiempo de
+ejecución: FCFS, Round Robin (configurable quantum), SJF.</li>
+<li>Permitir generar/usar workloads con 100 procesos, y con 10 bursts
+por proceso (se definió esta estructura en el simulador).</li>
+<li>Registrar trazas de eventos (llegada, entrada/salida de CPU, espera
+por I/O, finalización) y calcular métricas finales.</li>
+<li>Ejecutar experiments para los tres escenarios de mezcla de procesos
+(50/50, 90% I/O, 90% CPU) y para cada algoritmo.</li>
+</ol>
+<h2 id="implementación-breve">Implementación (breve)</h2>
+<p>El simulador modela: - Tipo de bursts: <code>CPU_BURST</code>,
+<code>IO_BURST</code>. - Estados de proceso: <code>NEW</code>,
+<code>READY</code>, <code>RUNNING</code>, <code>WAITING</code>,
+<code>TERMINATED</code>. - Estructuras de colas: cola FIFO para FCFS y
+RR, y cola por prioridad (duración del próximo CPU burst) para SJF. -
+Dispatch y actualización por tick de reloj: llegada de procesos,
+decremento de bursts, manejo de I/O y preempción para Round Robin.</p>
+<p>Se añadieron generadores dinámicos de workloads que crean 100
+procesos con una fracción de I/O especificada (por ejemplo 0.90 para 90%
+I/O-bound). Cada proceso obtiene 10 bursts generados aleatoriamente
+respetando la clasificación I/O/CPU-bound (probabilidades y
+distribuciones de duración configurables en el código).</p>
+<h2 id="workloads-utilizados">Workloads utilizados</h2>
+<ul>
+<li>Balanced (50% I/O, 50% CPU). 100 procesos.</li>
+<li>I/O-heavy (90% I/O, 10% CPU). 100 procesos.</li>
+<li>CPU-heavy (10% I/O, 90% CPU). 100 procesos.</li>
+</ul>
+<p>Los procesos se hicieron llegar en el tiempo agrupando 10 procesos
+por unidad de tiempo (arrival_time = index / 10), para distribuir
+arrivos durante 10 unidades de tiempo.</p>
+<h2 id="resultados-medidos">Resultados medidos</h2>
+<p>Los resultados provienen del fichero <code>testcases.txt</code>
+(salida del simulador) y resumen las métricas promedio para cada
+combinación algoritmo × workload.</p>
+<h3 id="tabla-resumen-general">Tabla Resumen General</h3>
+<table style="width:100%;">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 15%" />
+<col style="width: 25%" />
+<col style="width: 22%" />
+<col style="width: 19%" />
+</colgroup>
+<thead>
+<tr>
+<th>Algoritmo</th>
+<th>Workload</th>
+<th>Avg Turnaround</th>
+<th>Avg Response</th>
+<th>Throughput</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FCFS</strong></td>
+<td>I/O Bound (90/10)</td>
+<td>2517.54</td>
+<td>265.98</td>
+<td>0.034</td>
+</tr>
+<tr>
+<td><strong>FCFS</strong></td>
+<td>Balanced (50/50)</td>
+<td>3746.24</td>
+<td>277.57</td>
+<td>0.021</td>
+</tr>
+<tr>
+<td><strong>FCFS</strong></td>
+<td>CPU Bound (10/90)</td>
+<td>5606.55</td>
+<td>324.30</td>
+<td>0.015</td>
+</tr>
+<tr>
+<td><strong>Round Robin (q=5)</strong></td>
+<td>I/O Bound (90/10)</td>
+<td>2403.41</td>
+<td><strong>195.69</strong></td>
+<td>0.033</td>
+</tr>
+<tr>
+<td><strong>Round Robin (q=5)</strong></td>
+<td>Balanced (50/50)</td>
+<td>3552.23</td>
+<td><strong>203.33</strong></td>
+<td>0.021</td>
+</tr>
+<tr>
+<td><strong>Round Robin (q=5)</strong></td>
+<td>CPU Bound (10/90)</td>
+<td>5421.26</td>
+<td><strong>215.63</strong></td>
+<td>0.016</td>
+</tr>
+<tr>
+<td><strong>SJF</strong></td>
+<td>I/O Bound (90/10)</td>
+<td><strong>1559.74</strong></td>
+<td>773.73</td>
+<td>0.034</td>
+</tr>
+<tr>
+<td><strong>SJF</strong></td>
+<td>Balanced (50/50)</td>
+<td><strong>2229.49</strong></td>
+<td>1099.37</td>
+<td>0.021</td>
+</tr>
+<tr>
+<td><strong>SJF</strong></td>
+<td>CPU Bound (10/90)</td>
+<td><strong>3859.01</strong></td>
+<td>1012.13</td>
+<td>0.016</td>
+</tr>
+</tbody>
+</table>
+<p><em>Nota: Los valores en <strong>negrita</strong> representan los
+mejores resultados para cada métrica por workload.</em></p>
+<hr />
+<h3 id="comparación-por-métrica">Comparación por Métrica</h3>
+<h4 id="turnaround-time-menor-es-mejor">Turnaround Time (menor es
+mejor)</h4>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 13%" />
+<col style="width: 30%" />
+<col style="width: 11%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Workload</th>
+<th>FCFS</th>
+<th>Round Robin</th>
+<th>SJF</th>
+<th>Ganador</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I/O Bound (90/10)</td>
+<td>2517.54</td>
+<td>2403.41</td>
+<td><strong>1559.74</strong></td>
+<td>SJF (-38% vs FCFS)</td>
+</tr>
+<tr>
+<td>Balanced (50/50)</td>
+<td>3746.24</td>
+<td>3552.23</td>
+<td><strong>2229.49</strong></td>
+<td>SJF (-40% vs FCFS)</td>
+</tr>
+<tr>
+<td>CPU Bound (10/90)</td>
+<td>5606.55</td>
+<td>5421.26</td>
+<td><strong>3859.01</strong></td>
+<td>SJF (-31% vs FCFS)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusión</strong>: SJF reduce el turnaround promedio entre
+31-40% comparado con FCFS.</p>
+<hr />
+<h4 id="response-time-menor-es-mejor">Response Time (menor es
+mejor)</h4>
+<table>
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 13%" />
+<col style="width: 30%" />
+<col style="width: 11%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr>
+<th>Workload</th>
+<th>FCFS</th>
+<th>Round Robin</th>
+<th>SJF</th>
+<th>Ganador</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I/O Bound (90/10)</td>
+<td>265.98</td>
+<td><strong>195.69</strong></td>
+<td>773.73</td>
+<td>Round Robin (-26% vs FCFS)</td>
+</tr>
+<tr>
+<td>Balanced (50/50)</td>
+<td>277.57</td>
+<td><strong>203.33</strong></td>
+<td>1099.37</td>
+<td>Round Robin (-27% vs FCFS)</td>
+</tr>
+<tr>
+<td>CPU Bound (10/90)</td>
+<td>324.30</td>
+<td><strong>215.63</strong></td>
+<td>1012.13</td>
+<td>Round Robin (-34% vs FCFS)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusión</strong>: Round Robin mejora el tiempo de
+respuesta entre 26-34% comparado con FCFS. SJF tiene el peor response
+time (294-441% mayor que RR).</p>
+<hr />
+<h4 id="throughput-mayor-es-mejor">Throughput (mayor es mejor)</h4>
+<table>
+<thead>
+<tr>
+<th>Workload</th>
+<th>FCFS</th>
+<th>Round Robin</th>
+<th>SJF</th>
+<th>Observación</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I/O Bound (90/10)</td>
+<td>0.034</td>
+<td>0.033</td>
+<td>0.034</td>
+<td>Empate técnico</td>
+</tr>
+<tr>
+<td>Balanced (50/50)</td>
+<td>0.021</td>
+<td>0.021</td>
+<td>0.021</td>
+<td>Idéntico</td>
+</tr>
+<tr>
+<td>CPU Bound (10/90)</td>
+<td>0.015</td>
+<td>0.016</td>
+<td>0.016</td>
+<td>RR/SJF ligeramente mejor</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusión</strong>: El throughput es prácticamente idéntico
+entre algoritmos para cada workload, dominado por la carga total de
+trabajo.</p>
+<hr />
+<h3 id="análisis-por-workload">Análisis por Workload</h3>
+<h4 id="workload-io-bound-90-io-10-cpu">Workload I/O Bound (90% I/O, 10%
+CPU)</h4>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 12%" />
+<col style="width: 26%" />
+<col style="width: 10%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Métrica</th>
+<th>FCFS</th>
+<th>Round Robin</th>
+<th>SJF</th>
+<th>Diferencia Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Avg Turnaround</td>
+<td>2517.54</td>
+<td>2403.41 (-4.5%)</td>
+<td><strong>1559.74 (-38%)</strong></td>
+<td>957.80</td>
+</tr>
+<tr>
+<td>Avg Response</td>
+<td>265.98</td>
+<td><strong>195.69 (-26%)</strong></td>
+<td>773.73 (+191%)</td>
+<td>578.04</td>
+</tr>
+<tr>
+<td>Throughput</td>
+<td>0.034</td>
+<td>0.033</td>
+<td>0.034</td>
+<td>≈0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Mejor para Turnaround</strong>: SJF<br />
+<strong>Mejor para Response</strong>: Round Robin<br />
+<strong>Mejor para Throughput</strong>: Empate (FCFS/SJF)</p>
+<hr />
+<h4 id="workload-balanced-50-io-50-cpu">Workload Balanced (50% I/O, 50%
+CPU)</h4>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 12%" />
+<col style="width: 26%" />
+<col style="width: 10%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Métrica</th>
+<th>FCFS</th>
+<th>Round Robin</th>
+<th>SJF</th>
+<th>Diferencia Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Avg Turnaround</td>
+<td>3746.24</td>
+<td>3552.23 (-5.2%)</td>
+<td><strong>2229.49 (-40%)</strong></td>
+<td>1516.75</td>
+</tr>
+<tr>
+<td>Avg Response</td>
+<td>277.57</td>
+<td><strong>203.33 (-27%)</strong></td>
+<td>1099.37 (+296%)</td>
+<td>896.04</td>
+</tr>
+<tr>
+<td>Throughput</td>
+<td>0.021</td>
+<td>0.021</td>
+<td>0.021</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Mejor para Turnaround</strong>: SJF<br />
+<strong>Mejor para Response</strong>: Round Robin<br />
+<strong>Mejor para Throughput</strong>: Empate</p>
+<hr />
+<h4 id="workload-cpu-bound-10-io-90-cpu">Workload CPU Bound (10% I/O,
+90% CPU)</h4>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 12%" />
+<col style="width: 26%" />
+<col style="width: 10%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr>
+<th>Métrica</th>
+<th>FCFS</th>
+<th>Round Robin</th>
+<th>SJF</th>
+<th>Diferencia Max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Avg Turnaround</td>
+<td>5606.55</td>
+<td>5421.26 (-3.3%)</td>
+<td><strong>3859.01 (-31%)</strong></td>
+<td>1747.54</td>
+</tr>
+<tr>
+<td>Avg Response</td>
+<td>324.30</td>
+<td><strong>215.63 (-34%)</strong></td>
+<td>1012.13 (+212%)</td>
+<td>796.50</td>
+</tr>
+<tr>
+<td>Throughput</td>
+<td>0.015</td>
+<td>0.016 (+6.7%)</td>
+<td>0.016 (+6.7%)</td>
+<td>0.001</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Mejor para Turnaround</strong>: SJF<br />
+<strong>Mejor para Response</strong>: Round Robin<br />
+<strong>Mejor para Throughput</strong>: Round Robin/SJF</p>
+<hr />
+<h3 id="gráfico-visual-de-rendimiento-relativo">Gráfico Visual de
+Rendimiento Relativo</h3>
+<h4 id="turnaround-time-normalizado-a-fcfs-100">Turnaround Time
+(normalizado a FCFS = 100%)</h4>
+<table>
+<thead>
+<tr>
+<th>Workload</th>
+<th>FCFS</th>
+<th>Round Robin</th>
+<th>SJF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I/O Bound</td>
+<td>100%</td>
+<td>95%</td>
+<td><strong>62%</strong> ⬇</td>
+</tr>
+<tr>
+<td>Balanced</td>
+<td>100%</td>
+<td>95%</td>
+<td><strong>59%</strong> ⬇</td>
+</tr>
+<tr>
+<td>CPU Bound</td>
+<td>100%</td>
+<td>97%</td>
+<td><strong>69%</strong> ⬇</td>
+</tr>
+</tbody>
+</table>
+<h4 id="response-time-normalizado-a-fcfs-100">Response Time (normalizado
+a FCFS = 100%)</h4>
+<table>
+<thead>
+<tr>
+<th>Workload</th>
+<th>FCFS</th>
+<th>Round Robin</th>
+<th>SJF</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I/O Bound</td>
+<td>100%</td>
+<td><strong>74%</strong> ⬇</td>
+<td>291% ⬆</td>
+</tr>
+<tr>
+<td>Balanced</td>
+<td>100%</td>
+<td><strong>73%</strong> ⬇</td>
+<td>396% ⬆</td>
+</tr>
+<tr>
+<td>CPU Bound</td>
+<td>100%</td>
+<td><strong>66%</strong> ⬇</td>
+<td>312% ⬆</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="análisis-y-discusión">Análisis y discusión</h2>
+<p>A partir de los resultados medidos:</p>
+<ol type="1">
+<li>Throughput
+<ul>
+<li>El throughput es similar entre algoritmos para cada tipo de workload
+(valores muy cercanos por escenario). Esto indica que la cantidad de
+procesos completados por unidad de tiempo estuvo dominada por la carga
+total de CPU/I/O y la duración agregada de los bursts más que por la
+política de scheduling en estos experimentos.</li>
+</ul></li>
+<li>Turnaround promedio
+<ul>
+<li>SJF muestra consistentemente el menor Avg Turnaround en los tres
+escenarios, particularmente en el caso I/O-bound (1559.74 vs 2517.54 en
+FCFS y 2403.41 en RR). Esto es consistente con la propiedad de SJF de
+priorizar trabajos cortos, reduciendo el tiempo promedio de
+finalización.</li>
+<li>FCFS presenta el peor Avg Turnaround para todos los escenarios,
+especialmente en CPU-heavy (5606.55), por su naturaleza no-preemptiva y
+orden FIFO que penaliza procesos largos al inicio.</li>
+</ul></li>
+<li>Response time promedio
+<ul>
+<li>Round Robin con quantum = 5 produce los mejores (menores) Avg
+Response en todos los escenarios comparado con FCFS y SJF (ej. RR
+I/O-bound: 195.69 vs FCFS 265.98 y SJF 773.73). RR mejora la latencia
+inicial al repartir la CPU frecuentemente entre procesos.</li>
+<li>SJF tiene un Avg Response alto, especialmente en Balanced y
+CPU-heavy, porque prioriza procesos con ráfagas cortas; procesos largos
+pueden esperar mucho antes de obtener CPU y así su tiempo hasta el
+primer inicio aumenta.</li>
+</ul></li>
+<li>Efecto del workload
+<ul>
+<li>En general, a medida que el workload se vuelve más CPU-bound, avg
+turnaround y response tienden a incrementarse para FCFS y SJF, aunque
+SJF reduce el impacto relativo gracias a su preferencia por trabajos
+cortos.</li>
+<li>RR mejora el response en comparación con FCFS y SJF, especialmente
+para I/O-bound y workloads balanceados.</li>
+</ul></li>
+</ol>
+<h2 id="recomendaciones">Recomendaciones</h2>
+<ul>
+<li>Para minimizar turnaround promedio en un entorno mixto o
+I/O-dominante, SJF suele ser la mejor opción.</li>
+<li>Si la prioridad es reducir la latencia de respuesta (por ejemplo
+sistemas interactivos), Round Robin con quantum pequeño (ej. 4–8) es
+preferible.</li>
+<li>FCFS es simple pero puede tener un rendimiento pobre para cargas que
+incluyen procesos largos (CPU-bound).</li>
+</ul>
+<h2 id="limitaciones-y-trabajo-futuro">Limitaciones y trabajo
+futuro</h2>
+<ul>
+<li>La generación de bursts es aleatoria; para estudios estadísticos
+robustos conviene ejecutar cada combinación algoritmo×workload múltiples
+veces (p. ej. 30 replicaciones) y reportar medias y desviaciones
+estándar.</li>
+<li>Se podría exportar la traza y los datos a CSV para análisis en
+Python/R y generar gráficos (CDF, boxplots) de las métricas.</li>
+<li>Evaluar más políticas (Priority, Multilevel Feedback Queue) y medir
+efectos de diferentes quantums en RR.</li>
+<li>Añadir liberación de memoria y opciones de configuración (número de
+procesos, bursts por proceso, distribución de duraciones) vía línea de
+comandos o archivo de configuración.</li>
+</ul>
+<h2 id="conclusión">Conclusión</h2>
+<p>Los resultados muestran las típicas ventajas y desventajas de cada
+algoritmo: SJF optimiza turnaround, RR reduce tiempo de respuesta, y
+FCFS es el menos eficiente en presencia de procesos largos. El
+throughput fue similar entre algoritmos en estas instancias porque
+depende más del total de trabajo y de la mezcla I/O/CPU que de la
+política en sí.</p>
+<h2 id="uso-de-llms-documentación-mínima">Uso de LLMs (documentación
+mínima)</h2>
+<p>Se consultó un LLM para:</p>
+<ul>
+<li><strong>Estructuras de datos:</strong> Implementación de una cola de
+prioridad (priority queue) para el algoritmo SJF y cola FIFO para
+FCFS/RR en C.</li>
+<li><strong>Lógica de scheduling:</strong> Asistencia en la lógica de
+inserción y extracción de procesos de las colas, manejo de estados y
+transiciones entre READY, RUNNING, WAITING.</li>
+<li><strong>Manejo de memoria:</strong> Recomendaciones sobre gestión de
+memoria dinámica para las estructuras de colas y procesos.</li>
+<li><strong>Arquitectura del simulador:</strong> Sugerencias sobre la
+organización del ciclo principal de simulación (tick-based) y
+actualización de estados.</li>
+</ul>
+<p><strong>Criterios finales de diseño:</strong> Las estructuras de
+colas, los algoritmos de inserción/extracción y la máquina de estados de
+procesos fueron ajustados por el equipo para garantizar: - Correcta
+priorización en SJF (menor burst primero) - Manejo apropiado de
+preempción en Round Robin - Transiciones de estado consistentes -
+Liberación completa de memoria al finalizar</p>
+<p>Conversacion Completa para la implementacion:
+https://chatgpt.com/share/6907b2cb-03f8-8006-b5ac-d120824325fc</p>

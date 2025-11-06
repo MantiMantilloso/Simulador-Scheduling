@@ -105,7 +105,7 @@ Los resultados provienen del fichero `testcases.txt` (salida del simulador) y re
 |---------|------|-------------|-----|----------------|
 | Avg Turnaround | 2517.54 | 2403.41 (-4.5%) | **1559.74 (-38%)** | 957.80 |
 | Avg Response | 265.98 | **195.69 (-26%)** | 773.73 (+191%) | 578.04 |
-| Throughput | 0.034 | 0.033 | 0.034 | ≈0 |
+| Throughput | 0.034 | 0.033 | 0.034 | ~0 |
 
 **Mejor para Turnaround**: SJF  
 **Mejor para Response**: Round Robin  
@@ -147,17 +147,17 @@ Los resultados provienen del fichero `testcases.txt` (salida del simulador) y re
 
 | Workload | FCFS | Round Robin | SJF |
 |----------|------|-------------|-----|
-| I/O Bound | 100% | 95% | **62%** ⬇ |
-| Balanced | 100% | 95% | **59%** ⬇ |
-| CPU Bound | 100% | 97% | **69%** ⬇ |
+| I/O Bound | 100% | 95% | **62%** (down) |
+| Balanced | 100% | 95% | **59%** (down) |
+| CPU Bound | 100% | 97% | **69%** (down) |
 
 #### Response Time (normalizado a FCFS = 100%)
 
 | Workload | FCFS | Round Robin | SJF |
 |----------|------|-------------|-----|
-| I/O Bound | 100% | **74%** ⬇ | 291% ⬆ |
-| Balanced | 100% | **73%** ⬇ | 396% ⬆ |
-| CPU Bound | 100% | **66%** ⬇ | 312% ⬆ |
+| I/O Bound | 100% | **74%** (down) | 291% (up) |
+| Balanced | 100% | **73%** (down) | 396% (up) |
+| CPU Bound | 100% | **66%** (down) | 312% (up) |
 
 ---
 
